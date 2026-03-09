@@ -7,7 +7,7 @@ const optionsContainer = document.getElementById("options-container");
 const inputContainer = document.getElementById("input-container");
 const videoContainer = document.getElementById("video-container");
 const connectivityOptionsContainer = document.getElementById(
-  "connectivity-options-container"
+  "connectivity-options-container",
 );
 
 const videoInput = document.getElementById("video-input");
@@ -34,6 +34,44 @@ let config = null;
 
 let startTime = null;
 
+let candidate_id = 0;
+let candidates = [
+  {
+    candidate:
+      "candidate:0 1 UDP 92217343 172.7.191.87 53295 typ relay raddr 172.7.191.87 rport 53295",
+    sdpMLineIndex: 0,
+    sdpMid: "0",
+    //usernameFragment: "5bb2eded",
+  },
+  {
+    candidate:
+      "candidate:0 2 UDP 92217342 172.7.191.87 58014 typ relay raddr 172.7.191.87 rport 58014",
+    sdpMLineIndex: 0,
+    sdpMid: "0",
+    //usernameFragment: "5bb2eded",
+  },
+  {
+    candidate:
+      "candidate:1 1 UDP 8331263 172.7.191.87 52158 typ relay raddr 172.7.191.87 rport 52158",
+    sdpMLineIndex: 0,
+    sdpMid: "0",
+    //usernameFragment: "5bb2eded",
+  },
+  {
+    candidate:
+      "candidate:1 2 UDP 8331262 172.7.191.87 52317 typ relay raddr 172.7.191.87 rport 52317",
+    sdpMLineIndex: 0,
+    sdpMid: "0",
+    //usernameFragment: "5bb2eded",
+  },
+  {
+    candidate: "",
+    sdpMLineIndex: 0,
+    sdpMid: "0",
+    //usernameFragment: "5bb2eded",
+  },
+];
+
 async function getServers() {
   const baseUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Tokens.json`;
   const credentials = btoa(`${accountSid}:${authToken}`);
@@ -45,7 +83,7 @@ async function getServers() {
         Authorization: `Basic ${credentials}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "", // Twilio Token endpoint does not require a body
+      body: "", 
     });
 
     if (!res.ok) {
@@ -85,6 +123,7 @@ const configs = [
   },
   // 3 - BUILD MACHINE
   {
+    iceTransportPolicy: "relay",
     iceServers: [
       {
         urls: "stun:stun.l.google.com:19302",
@@ -93,22 +132,67 @@ const configs = [
         urls: "stun:stun3.l.google.com:19302",
       },
       {
-        urls: "stun:103.126.36.5:3478",
-      },
-      {
-        urls: "turn:103.126.36.6:3478?transport=udp",
+        urls: "turn: :3478?transport=udp",
         username: "test",
         credential: "test",
       },
       {
-        urls: "turn:103.126.36.6:3478?transport=tcp",
+        urls: "turn:172.7.191.69:3478?transport=tcp",
         username: "test",
         credential: "test",
       },
     ],
   },
-  // 4 - LOCAL
+  // 4 - AWS
   {
+    iceTransportPolicy: "relay",
+    iceServers: [
+      {
+        urls: "stun:turn-server.eaglepixelstreaming.com",
+      },
+      {
+        urls: "turn:turn-server.eaglepixelstreaming.com:3478?transport=udp",
+        username: "new",
+        credential: "pass",
+      },
+      {
+        urls: "turn:turn-server.eaglepixelstreaming.com:3478?transport=tcp",
+        username: "new",
+        credential: "pass",
+      },
+      {
+        urls: "turns:turn-server.eaglepixelstreaming.com:5349?transport=tcp",
+        username: "new",
+        credential: "pass",
+      }
+    ],
+  },
+  // {
+  //   iceTransportPolicy: "relay",
+  //   iceServers: [
+  //     {
+  //       urls: "stun:turn-server.eaglepixelstreaming.com:3478",
+  //     },
+  //     {
+  //       urls: "turn:turn-server.eaglepixelstreaming.com:3478?transport=udp",
+  //       username: "test",
+  //       credential: "test",
+  //     },
+  //     {
+  //       urls: "turn:turn-server.eaglepixelstreaming.com:3478?transport=tcp",
+  //       username: "test",
+  //       credential: "test",
+  //     },
+  //     {
+  //       urls: "turns:turn-server.eaglepixelstreaming.com:5349?transport=tcp",
+  //       username: "test",
+  //       credential: "test",
+  //     },
+  //   ],
+  // },
+  //5 - local
+  {
+    iceTransportPolicy: "relay",
     iceServers: [
       {
         urls: "stun:stun.l.google.com:19302",
@@ -117,18 +201,20 @@ const configs = [
         urls: "stun:stun3.l.google.com:19302",
       },
       {
-        urls: "turn:10.29.176.88:3478?transport=udp",
+        urls: "turn:192.168.0.106:3478?transport=udp",
         username: "test",
         credential: "test",
       },
       {
-        urls: "turn:10.29.176.88:3478?transport=tcp",
+        urls: "turn:192.168.0.106:3478?transport=tcp",
         username: "test",
         credential: "test",
       },
     ],
   },
+  //6 - Metered
   {
+    iceTransportPolicy: "relay",
     iceServers: [
       {
         urls: "stun:stun.relay.metered.ca:80",
@@ -155,6 +241,7 @@ const configs = [
       },
     ],
   },
+  //7 - stun and turn
   {
     iceTransportPolicy: "relay",
     iceServers: [
@@ -169,6 +256,22 @@ const configs = [
         credential: "test",
       },
     ],
+  },
+  // 8 - CoTurn Mumbai
+  {
+    iceTransportPolicy: "relay",
+    iceServers: [
+      {
+        urls: "turn:13.233.106.107:3478?transport=udp",
+        username: "test",
+        credential: "test",
+      },
+      {
+        urls: "turn:13.233.106.107:3478?transport=tcp",
+        username: "test",
+        credential: "test",
+      },
+    ]
   },
   {
     iceServers: [
@@ -189,10 +292,21 @@ const configs = [
   },
 ];
 
+// get TWILIO ice servers
 (async () => {
   //twilioIceServers = await getServers();
   configs[2] = await getServers();
   configs[2].iceTransportPolicy = "relay";
+})();
+
+
+// get LOCAL ice servers
+(async () => {
+  const response = await fetch('https://turn-server.eaglepixelstreaming.com/api/credentials');
+  const data = await response.json();
+  
+  configs[5].iceServers = data.iceServers;
+  configs[5].iceTransportPolicy = "relay";
 })();
 
 function iceGatheringCompleted(pc) {
@@ -265,56 +379,55 @@ function dtlsState(pc) {
   return transport.state === "connected";
 }
 
-async function peerConnected(pc) {
-  if (
-    pc.connectionState === "connected" ||
-    pc.connectionState === "completed"
-  ) {
-    return;
-  }
-
-  await new Promise((res) => {
-    pc.addEventListener("connectionstatechange", function checkState() {
-      if (
-        pc.connectionState === "connected" ||
-        pc.connectionState === "completed"
-      ) {
-        pc.removeEventListener("connectionstatechage", checkState);
-        res();
-      }
-    });
-  });
-}
-
-function sleep(ms) {
-  return new Promise((res) => setTimeout(res, ms));
-}
-
-async function nominatedCandidate(peerConnection, timeout) {
-  const start = Date.now();
-
-  while (Date.now() - start < timeout) {
-    const stats = await peerConnection.getStats();
-
-    for (let stat of stats.values()) {
-      if (stat.type === "candidate-pair" && stat.nominated) {
-        return stat.localCandidateId;
-      }
-    }
-    await sleep(50);
-  }
-
-  throw new Error("Timeout Reached: Nominated Candidate Not Found");
-}
-
 async function isUsingTurn(peerConnection) {
   if (!peerConnection) {
     throw new Error("Bad Usage");
   }
 
-  await peerConnected(peerConnection);
+  function sleep(ms) {
+    return new Promise((res) => setTimeout(res, ms));
+  }
+
+  async function peerConnected(pc) {
+    if (
+      pc.connectionState === "connected" ||
+      pc.connectionState === "completed"
+    ) {
+      return;
+    }
+
+    await new Promise((res) => {
+      pc.addEventListener("connectionstatechange", function checkState() {
+        if (
+          pc.connectionState === "connected" ||
+          pc.connectionState === "completed"
+        ) {
+          pc.removeEventListener("connectionstatechage", checkState);
+          res();
+        }
+      });
+    });
+  }
 
   const timeout = 2000;
+  async function nominatedCandidate(peerConnection, timeout) {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      const stats = await peerConnection.getStats();
+
+      for (let stat of stats.values()) {
+        if (stat.type === "candidate-pair" && stat.nominated) {
+          return stat.localCandidateId;
+        }
+      }
+      await sleep(50);
+    }
+
+    throw new Error("Timeout Reached: Nominated Candidate Not Found");
+  }
+
+  await peerConnected(peerConnection);
+
   let localCandidateId = await nominatedCandidate(peerConnection, timeout);
 
   const stats = await peerConnection.getStats();
@@ -329,19 +442,29 @@ async function isUsingTurn(peerConnection) {
 function createPeerConnection(config) {
   config = configs[+selectionMenu.value];
 
-  // console.log("CREATING NEW PC");
+  console.log("CREATING NEW PC");
 
   pc = new RTCPeerConnection(config);
 
   pc.addEventListener("icecandidate", ({ candidate }) => {
     if (candidate) {
+      //candidates.push(new RTCIceCandidate(candidate));
+      console.log("******************************************");
+      console.table(candidate);
+      console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+      console.table(candidate.url);
+      console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
       ws.send(JSON.stringify({ type: "candidate", candidate }));
+      // candidate = candidates[candidate_id % candidates.length];
+      // candidate_id++;
+      // ws.send(JSON.stringify({ type: "candidate", candidate }));
+      //console.log(candidates);
     }
   });
 
   pc.addEventListener("track", (event) => {
     ws.send(JSON.stringify({ type: "track" }));
-    // console.log(">>> TRACK RECEIVED <<<<");
+    console.log(">>> TRACK RECEIVED <<<<");
     remoteStream.addTrack(event.track);
   });
 
@@ -353,36 +476,36 @@ function createPeerConnection(config) {
       case "complete":
         console.log(
           `*** time: ${(performance.now() - iceGatheringStart).toFixed(
-            2
-          )} ms ***`
+            2,
+          )} ms ***`,
         );
     }
   });
 
   pc.addEventListener("connectionstatechange", async () => {
-    // console.log(`pc.connectionState: ${pc.connectionState}`);
+    console.log(`pc.connectionState: ${pc.connectionState}`);
     switch (pc.connectionState) {
       case "connected":
-        // console.log("CONNECTED");
+        console.log("CONNECTED");
         const starttime = performance.now();
         const usingTurn = await isUsingTurn(pc);
-        // console.log(`Using TURN: ${usingTurn}`);
-        // console.log(`time: ${(performance.now() - starttime).toFixed(2)} ms`);
+        console.log(`Using TURN: ${usingTurn}`);
+        console.log(`time: ${(performance.now() - starttime).toFixed(2)} ms`);
         const endTime = performance.now();
-        // console.log(`Time: ${(endTime - startTime).toFixed(2)} ms`);
+        console.log(`Time: ${(endTime - startTime).toFixed(2)} ms`);
         break;
 
       case "completed":
-        // console.log("COMPLETED");
+        console.log("COMPLETED");
         break;
 
       case "failed":
-        // console.log("FAILED")
+        console.log("FAILED");
         // alert("Failed to Connect Peer");
         break;
 
       case "disconnected":
-        // console.log("DISCONNECTED");
+        console.log("DISCONNECTED");
         break;
 
       default:
@@ -391,24 +514,24 @@ function createPeerConnection(config) {
   });
 
   pc.addEventListener("iceconnectionstatechange", async () => {
-    // console.log(`pc.icestate: ${pc.iceConnectionState}`);
+    console.log(`pc.icestate: ${pc.iceConnectionState}`);
     switch (pc.iceConnectionState) {
       case "connected":
-        // console.log("ICE CONNECTED");
+        console.log("ICE CONNECTED");
         if (player) {
           streamerVideo.play().catch((e) => {
-            // console.log(e);
+            console.log(e);
             ws.send(JSON.stringify({ type: "video_playing_error" }));
           });
         }
         break;
 
       case "disconnected":
-        // console.log("ICE DISCONNECTED");
+        console.log("ICE DISCONNECTED");
         break;
 
       case "failed":
-        // console.log("ICE FAILED")
+        console.log("ICE FAILED");
         //makeOffer();
         break;
 
@@ -436,13 +559,13 @@ function addTracks() {
   }
 
   stream.getTracks().forEach((track) => {
-    // console.log("**** TRACK ADDED *****");
+    console.log("**** TRACK ADDED *****");
     pc.addTrack(track, stream);
   });
 }
 
 async function sendStream(offer) {
-  // console.log("sending stream");
+  console.log("sending stream");
   if (!pc) {
     createPeerConnection();
 
@@ -457,22 +580,22 @@ async function sendStream(offer) {
 
 // retry with STUN/TURN if HOST/STUN fails
 async function makeOffer() {
-  // console.log(`Making Offer: ${+selectionMenu.value}`);
+  console.log(`Making Offer: ${+selectionMenu.value}`);
 
   config = configs[+selectionMenu.value];
-  // console.log(`config: ${config}`);
-  // console.table(config);
+  console.log(`config: ${config}`);
+  console.table(config);
 
   pc.setConfiguration(config);
   pc.restartIce();
   const offer = await pc.createOffer({ iceRestart: true });
   await pc.setLocalDescription(offer);
-  startTime = performance.now();
+  //startTime = performance.now();
   ws.send(JSON.stringify({ type: "offer", offer }));
 }
 
 async function requestStream() {
-  // console.log("requesting stream");
+  console.log("requesting stream");
   if (!pc) {
     createPeerConnection();
 
@@ -493,7 +616,7 @@ function stopStream() {
 
 ws.addEventListener("message", async (message) => {
   const data = JSON.parse(
-    message.data instanceof Blob ? await message.data.text() : message.data
+    message.data instanceof Blob ? await message.data.text() : message.data,
   );
 
   if (data.type === "bye") {
@@ -513,9 +636,9 @@ ws.addEventListener("message", async (message) => {
       break;
 
     case "offer":
-      // console.log("OFFER RECEIVED")
+      console.log("OFFER RECEIVED");
       if (streamer) {
-        // console.log('ADDING STREAM')
+        console.log("ADDING STREAM");
         addTracks();
       }
       await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
@@ -525,20 +648,20 @@ ws.addEventListener("message", async (message) => {
       break;
 
     case "answer":
-      // console.log("ANSWER RECEIVED")
+      console.log("ANSWER RECEIVED");
       await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
       break;
 
     case "track":
-      // console.log('>>> TRACK RECEIVED <<<');
+      console.log(">>> TRACK RECEIVED <<<");
       break;
 
     case "video_playing_error":
-      // // console.log("PEER: Vide Playing Error");
+      // console.log("PEER: Vide Playing Error");
       break;
 
     default:
-      // // console.log("ERROR! DATA TYPE IS NOT UNDERSTOOD");
+      // console.log("ERROR! DATA TYPE IS NOT UNDERSTOOD");
       break;
   }
 });
@@ -636,7 +759,7 @@ function toggleFS() {
 }
 
 window.addEventListener("beforeunload", () => {
-  // // console.log("closing peer connection...");
+  // console.log("closing peer connection...");
   closePeerConnection();
 });
 
@@ -672,12 +795,12 @@ function closePeerConnection() {
   pc.close();
   pc = null;
 
-  // // console.log("peer closed");
-  // // console.log("peer: ", pc);
+  // console.log("peer closed");
+  // console.log("peer: ", pc);
 }
 
 recreatePcBtn.addEventListener("click", () => {
-  // // console.log(player ? "Player" : "Streamer");
+  // console.log(player ? "Player" : "Streamer");
   if (pc) {
     closePeerConnection();
   }
@@ -689,7 +812,7 @@ recreatePcBtn.addEventListener("click", () => {
 });
 
 makeOfferBtn.addEventListener("click", () => {
-  // // console.log(+selectionMenu.value);
+  // console.log(+selectionMenu.value);
   if (player) {
     requestStream();
   } else {
