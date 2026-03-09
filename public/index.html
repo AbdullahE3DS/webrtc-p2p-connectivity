@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>p2p vidoe streaming</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <main>
+        <div id="options-container">
+            <button id="stream-btn" class="btn">Stream</button>
+            <button id="play-btn" class="btn">Play</button>
+        </div>
+
+        <div id="input-container">
+            <h1>Please Select A Video To Play</h1>
+            <input id="video-input" class="input" type="file" accept="video/*" />
+        </div>
+
+        <div id="request-container">
+            <p>Requesting Stream...</p>
+        </div>
+
+        <div id="video-container">
+            <div id="connectivity-options-container" class="hidden">
+                <p id="role"></p>
+                <div>
+                    <select id="iceservers-options" name="ICE Servers" class="btn">
+                        <option value="0">No Servers</option>
+                        <option value="1">Only STUN</option>
+                        <option value="2">TWILIO</option>
+                        <option value="3">BUILD MACHINE</option>
+                        <option value="4" selected>AWS</option>
+                        <option value="5">LOCAL</option>
+                        <option value="6">Metered</option>
+                        <option value="7">STUN & TURN</option>
+                        <option value="8">CoTurn Mumbai</option>
+                    </select>
+                    <button id="recreate-pc-btn" class="btn">Recreate Peer</button>
+                    <button id="make-offer-btn" class="btn">Make Offer</button>
+                </div>
+            </div>
+
+            <video id="streamer-video" muted autoplay playsinline loop></video>
+            <div id="stream-options">
+                <button id="stop-stream-btn" class="btn">Stop</button>
+                <button id="mute-audio-btn" class="btn muted">Unmute Audio</button>
+                <button id="mute-video-btn" class="btn muted hidden">Mute Video</button>
+            </div>
+        </div>
+    </main>
+</body>
+
+<script src="functions.js"></script>
+
+</html>
